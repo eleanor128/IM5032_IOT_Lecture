@@ -67,9 +67,10 @@ def set_segments_1(a,b,c,d,e,f,g, dp=False):
         GPIO.output(SEG_PINS_1[seg], GPIO.HIGH if val else GPIO.LOW)
 
 # 控制第二個七段顯示器每一段 a~g 是否要點亮
+# 注意：第二個顯示器沒有小數點功能，所以忽略dp參數
 def set_segments_2(a,b,c,d,e,f,g, dp=False):
-    # 建立一個 dict 將每段對應到狀態
-    states = {'a':a,'b':b,'c':c,'d':d,'e':e,'f':f,'g':g,'dp':dp}
+    # 建立一個 dict 將每段對應到狀態（不包含dp）
+    states = {'a':a,'b':b,'c':c,'d':d,'e':e,'f':f,'g':g}
     # 對每一段的腳位設定 HIGH（亮）或 LOW（滅）
     for seg, val in states.items():
         GPIO.output(SEG_PINS_2[seg], GPIO.HIGH if val else GPIO.LOW)
@@ -115,20 +116,17 @@ def random_display():
     while game_running:
         current_digit1 = random.randint(0, 9)
         current_digit2 = random.randint(0, 9)
-        current_dp1 = random.choice([True, False])
-        current_dp2 = random.choice([True, False])
+        current_dp1 = random.choice([True, False])  # 只有第一個顯示器有小數點
+        current_dp2 = False  # 第二個顯示器沒有小數點
         
         show_digit_1(current_digit1, current_dp1)
-        show_digit_2(current_digit2, current_dp2)
+        show_digit_2(current_digit2, current_dp2)  # dp參數會被忽略
         time.sleep(0.1)  # 快速變化
 
 def get_displayed_number():
     """取得當前顯示的數字（考慮小數點位置）"""
-    if current_dp1 and not current_dp2:  # 第一個數字後有小數點: X.Y
-        return current_digit1 + current_digit2 * 0.1
-    elif current_dp2 and not current_dp1:  # 第二個數字後有小數點: XY.
-        return current_digit1 * 10 + current_digit2
-    elif current_dp1 and current_dp2:  # 兩個都有小數點: X.Y.（當作X.Y處理）
+    # 由於只有第一個顯示器有小數點功能
+    if current_dp1:  # 第一個數字後有小數點: X.Y
         return current_digit1 + current_digit2 * 0.1
     else:  # 沒有小數點: XY
         return current_digit1 * 10 + current_digit2
@@ -216,8 +214,7 @@ def multiplication_game():
     if current_dp1:
         display_str += "."
     display_str += f"{current_digit2}"
-    if current_dp2 and not current_dp1:
-        display_str += "."
+    # 第二個顯示器沒有小數點功能
     
     print(f"\n🎯 顯示器顯示: {display_str}")
     print(f"🎯 對應的數字是: {target_number}")
