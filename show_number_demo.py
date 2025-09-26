@@ -134,9 +134,9 @@ try:
                 led_on()
             else:
                 led_off()
-                
-            time.sleep(0.2)  # 每個數字顯示 0.5 秒
-            
+
+            time.sleep(0.5)  # 每個數字顯示 0.5 秒
+
         all_off()          # 間隔前先全部熄滅
         led_off()          # 關閉LED
         time.sleep(1)
