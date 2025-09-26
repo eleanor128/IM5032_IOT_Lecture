@@ -1,4 +1,5 @@
 import time
+import threading
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
 
@@ -158,13 +159,13 @@ def display_number(number):
         print(f"顯示: {digit1}.{digit2}")
         
     else:
-        # 整數處理 (例如: 25, 07)
+        # 整數處理
         number = int(number)
         if number < 10:
-            # 單位數 (0~9)
-            show_digit(1, 0, dp=False)       # 第一個顯示器顯示 0
+            # 單位數 (0~9) - 只在右邊顯示器顯示，左邊保持關閉
+            set_segments(1, 0, 0, 0, 0, 0, 0, 0, False)  # 第一個顯示器關閉
             show_digit(2, number, dp=False)  # 第二個顯示器顯示數字
-            print(f"顯示: 0{number}")
+            print(f"顯示: {number}")
         else:
             # 兩位數 (10~99)
             tens = number // 10
@@ -173,8 +174,38 @@ def display_number(number):
             show_digit(2, units, dp=False)   # 第二個顯示器顯示個位數
             print(f"顯示: {tens}{units}")
 
+import threading
+
+# 全域變數來控制自動清空
+last_display_time = 0
+clear_display_flag = True
+
+def auto_clear_display():
+    """5秒後自動清空顯示器"""
+    global last_display_time, clear_display_flag
+    
+    current_time = time.time()
+    last_display_time = current_time
+    
+    def clear_after_delay():
+        time.sleep(5)  # 等待5秒
+        # 檢查是否在這5秒內有新的顯示
+        if time.time() - last_display_time >= 4.9 and clear_display_flag:
+            all_off()      # 清空顯示器
+            print("\n顯示已自動清空")
+            print("請輸入數字: ", end="", flush=True)  # 重新顯示輸入提示
+    
+    # 啟動背景執行緒來處理自動清空
+    clear_thread = threading.Thread(target=clear_after_delay)
+    clear_thread.daemon = True  # 設為daemon，程式結束時會自動停止
+    clear_thread.start()
+    
+    return clear_thread
+
 def input_display_system():
     """主要的輸入顯示系統"""
+    global clear_display_flag
+    
     print("=" * 50)
     print("🔢 互動小遊戲")
     print("=" * 50)
@@ -182,13 +213,15 @@ def input_display_system():
     print("支援範圍:")
     print("  - 整數: 0~99")
     print("  - 小數: 0.1~9.9")
-    print("輸入 'q' 退出程式")
+    print("注意: 顯示5秒後會自動清空")
     print("=" * 50)
+    
+    current_timer = None  # 追蹤當前的計時器
     
     while True:
         try:
             user_input = input("\n請輸入數字: ").strip()
-            
+
             # 驗證輸入
             is_valid, number = validate_input(user_input)
             
@@ -197,6 +230,15 @@ def input_display_system():
                 led_off()  # 確保LED關閉
                 display_number(number)
                 print("✅ 輸入正確!")
+                print("(5秒後自動清空...)")
+                
+                # 停止之前的計時器（如果存在）
+                if current_timer and current_timer.is_alive():
+                    # 無法直接停止thread，但我們可以重新開始計時
+                    pass
+                
+                # 啟動新的自動清空計時器
+                current_timer = auto_clear_display()
                 
             else:
                 # 輸入錯誤，亮起LED並顯示錯誤訊息
@@ -214,6 +256,9 @@ def input_display_system():
             led_on()
             time.sleep(1)
             led_off()
+    
+    # 退出時停止自動清空
+    clear_display_flag = False
 
 
 # 主程式區塊
