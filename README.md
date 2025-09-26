@@ -12,6 +12,10 @@
 The source code is in **hw_task.py** , using RPi.GPIO  
 Identified the two 7-segment dislay are both **Common Cathode (CC)**.  
 
+<div align="center">
+<img width="240" height="" alt="image" src="CC.jpg"/>
+</div>
+
 Demo video: https://youtube.com/shorts/FcWIsOccVfQ?feature=share
 * Stage 1: display + LED demo
 * Stage 2: input + output  
