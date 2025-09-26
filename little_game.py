@@ -76,7 +76,7 @@ def set_segments_2(a,b,c,d,e,f,g =False):
 
 # 顯示某個數字 (0~9) 在第一個顯示器
 def show_digit_1(n, dp=False):
-    pattern = DIGITS.get(n, (0,0,0,0,0,0,0))  # 取出對應段碼，預設全部熄滅
+    pattern = DIGITS.get(n, (0,0,0,0,0,0,0,0))  # 取出對應段碼，預設全部熄滅
     set_segments_1(*pattern, dp=dp)  # 解包元組並傳給 set_segments_1
 
 # 顯示某個數字 (0~9) 在第二個顯示器

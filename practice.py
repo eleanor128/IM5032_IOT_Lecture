@@ -74,17 +74,17 @@ def set_segments(monitor_number,a,b,c,d,e,f,g,dp):
             GPIO.output(SEG_PINS_2[seg], GPIO.HIGH if val else GPIO.LOW)
 
 # 顯示某個數字 (0~9)
-def show_digit(monitor_number,n):
+def show_digit(monitor_number, n, dp=False):
     pattern = DIGITS.get(n, (0,0,0,0,0,0,0))  # 取出對應段碼，預設全部熄滅
     if monitor_number == 1:
-        set_segments(1,*pattern)  
+        set_segments(1, *pattern, dp)  # 為monitor 1添加dp參數
     elif monitor_number == 2:
-        set_segments(2,*pattern) 
+        set_segments(2, *pattern, False)  # monitor 2沒有dp，固定為False 
 
 # 熄滅所有段位（全部 LOW）
 def all_off():
-    set_segments(1,0,0,0,0,0,0,0)
-    set_segments(2,0,0,0,0,0,0,0)
+    set_segments(1, 0, 0, 0, 0, 0, 0, 0, False)  # monitor 1，包含dp
+    set_segments(2, 0, 0, 0, 0, 0, 0, 0, False)  # monitor 2，dp參數會被忽略
 
 # LED控制函數
 def led_on():
@@ -109,10 +109,15 @@ def segment_walk(delay=0.25):
 
 # 主程式區塊
 try:
+    # 測試LED
+    print("測試LED...")
     led_on()
     time.sleep(1)
     led_off()
     time.sleep(1)
+    
+    # 測試七段顯示器
+    print("測試七段顯示器...")
     segment_walk(0.3)
 
     while True:
@@ -121,8 +126,11 @@ try:
             tens = n // 10      # 十位數
             units = n % 10      # 個位數
             
-            show_digit(1,tens)  # 第一個顯示器顯示十位數
-            show_digit(2,units) # 第二個顯示器顯示個位數
+            # 每10個數字顯示小數點（例如：1.0, 2.0, 3.0...）
+            show_dp = (n % 10 == 0 and n > 0)
+            
+            show_digit(1, tens, dp=show_dp)  # 第一個顯示器顯示十位數，某些情況顯示小數點
+            show_digit(2, units)             # 第二個顯示器顯示個位數
             
             # 每5個數字亮一次LED
             if n % 5 == 0:
