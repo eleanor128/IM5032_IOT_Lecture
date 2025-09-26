@@ -6,7 +6,7 @@
 
 ## Wiring
 <div align="center">
-<img height="360" alt="image" src="wiring.jpg" />
+<img height="540" alt="image" src="wiring.jpg" />
 </div>
 
 
