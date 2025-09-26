@@ -130,14 +130,23 @@ def show_digits():
 def validate_input(user_input):
     """驗證用戶輸入是否有效"""
     try:
-        # 將輸入轉換為浮點數
-        num = float(user_input)
-        
-        # 檢查範圍：0~99 或 0.1~9.9
-        if (0 <= num <= 99) or (0.1 <= num <= 9.9):
-            return True, num
+        # 檢查輸入是否包含小數點
+        if '.' in user_input:
+            # 小數處理
+            num = float(user_input)
+            # 檢查小數範圍：0.1~9.9
+            if 0.1 <= num <= 9.9:
+                return True, user_input  # 返回原始字串，保持小數點格式
+            else:
+                return False, None
         else:
-            return False, None
+            # 整數處理
+            num = int(user_input)
+            # 檢查整數範圍：0~99
+            if 0 <= num <= 99:
+                return True, num  # 返回整數
+            else:
+                return False, None
             
     except ValueError:
         return False, None
@@ -146,10 +155,10 @@ def display_number(number):
     """在七段顯示器上顯示數字"""
     all_off()  # 先清空顯示
     
-    # 判斷是否為小數
-    if '.' in str(number):
-        # 小數處理 (例如: 1.5, 3.7)
-        parts = str(number).split('.')
+    # 判斷是否為小數（檢查原始輸入字串）
+    if isinstance(number, str) and '.' in number:
+        # 小數處理 (例如: "1.5", "3.7")
+        parts = number.split('.')
         digit1 = int(parts[0])  # 整數部分
         digit2 = int(parts[1][0])  # 小數第一位
         
