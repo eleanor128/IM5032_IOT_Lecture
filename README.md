@@ -5,7 +5,9 @@
 
 
 ## Wiring
-<img alt="image" src="wiring.jpg" />
+<div align="center">
+<img height="360" alt="image" src="wiring.jpg" />
+</div>
 
 
 ## Task 1 - Display & Read Input
