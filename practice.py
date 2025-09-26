@@ -121,16 +121,13 @@ try:
     segment_walk(0.3)
 
     while True:
-        # 依序顯示 0 到 99，使用兩位數顯示
-        for n in range(100):
-            tens = n // 10      # 十位數
-            units = n % 10      # 個位數
+        # 同步顯示 0 到 9，每隔兩位顯示一次小數點
+        for n in range(10):
+
+            show_dp = (n % 2 == 0 and n > 0)
             
-            # 每10個數字顯示小數點（例如：1.0, 2.0, 3.0...）
-            show_dp = (n % 10 == 0 and n > 0)
-            
-            show_digit(1, tens, dp=show_dp)  # 第一個顯示器顯示十位數，某些情況顯示小數點
-            show_digit(2, units)             # 第二個顯示器顯示個位數
+            show_digit(1, n, dp=show_dp)
+            show_digit(2, n)             
             
             # 每5個數字亮一次LED
             if n % 5 == 0:
@@ -138,7 +135,7 @@ try:
             else:
                 led_off()
                 
-            time.sleep(0.5)  # 每個數字顯示 0.5 秒
+            time.sleep(0.2)  # 每個數字顯示 0.5 秒
             
         all_off()          # 間隔前先全部熄滅
         led_off()          # 關閉LED
