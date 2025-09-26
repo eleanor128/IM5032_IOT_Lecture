@@ -4,7 +4,7 @@
 # HW1 - Raspberry Pi & 7-Segment Display
 
 ## Task 1 - Display & Read Input
-The source code is in *hw_task.py* , using RPi.GPIO  
+The source code is in **hw_task.py** , using RPi.GPIO  
 Identified the two 7-segment dislay are both **Common Cathode (CC)**.  
 
 Demo video: https://youtube.com/shorts/FcWIsOccVfQ?feature=share
@@ -18,5 +18,5 @@ Demo video: https://youtube.com/shorts/FcWIsOccVfQ?feature=share
 
 
 ## Task 2 - Stretch Ideas
-The source code is in *little_game.py* , using RPi.GPIO  
+The source code is in **little_game.py** , using RPi.GPIO  
 How to Play:   
