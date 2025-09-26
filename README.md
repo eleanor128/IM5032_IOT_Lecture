@@ -3,6 +3,11 @@
 
 # HW1 - Raspberry Pi & 7-Segment Display
 
+
+## Wiring
+<img alt="image" src="wiring.jpg" />
+
+
 ## Task 1 - Display & Read Input
 The source code is in **hw_task.py** , using RPi.GPIO  
 Identified the two 7-segment dislay are both **Common Cathode (CC)**.  
