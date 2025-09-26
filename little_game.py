@@ -44,7 +44,7 @@ GPIO.setup(LED_PIN, GPIO.OUT, initial=GPIO.LOW)
 
 
 # 定義 0~9 的段碼資料，每個元組代表 a~g 七段的亮滅狀態
-# True/1 = 點亮，False/0 = 熄滅（共陰極：HIGH=亮）
+# True/1 = 點亮，False/0 = 熄滅
 DIGITS = {
     0: (1,1,1,1,1,1,0),  # 顯示 0
     1: (0,1,1,0,0,0,0),  # 顯示 1
@@ -67,8 +67,7 @@ def set_segments_1(a,b,c,d,e,f,g, dp=False):
         GPIO.output(SEG_PINS_1[seg], GPIO.HIGH if val else GPIO.LOW)
 
 # 控制第二個七段顯示器每一段 a~g 是否要點亮
-# 注意：第二個顯示器沒有小數點功能，所以忽略dp參數
-def set_segments_2(a,b,c,d,e,f,g, dp=False):
+def set_segments_2(a,b,c,d,e,f,g =False):
     # 建立一個 dict 將每段對應到狀態（不包含dp）
     states = {'a':a,'b':b,'c':c,'d':d,'e':e,'f':f,'g':g}
     # 對每一段的腳位設定 HIGH（亮）或 LOW（滅）
