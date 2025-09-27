@@ -214,8 +214,6 @@ def multiplication_game():
     display_str += f"{current_digit2}"
     # 第二個顯示器沒有小數點功能
     
-    print(f"\n🎯 顯示器顯示: {display_str}")
-    print(f"🎯 對應的數字是: {target_number}")
     print("=" * 30)
     print("請輸入兩個數字相乘等於此數(可以是小數點):")
     
