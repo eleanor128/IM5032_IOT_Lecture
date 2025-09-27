@@ -26,6 +26,30 @@ Demo video: https://youtube.com/shorts/FcWIsOccVfQ?feature=share
 
 
 
-## Task 2 - Stretch Ideas
+## Task 2 - Stretch Ideas - Find The Numbers (Multiplication Game)
+
 The source code is in **little_game.py** , using RPi.GPIO  
-How to Play:   
+Demo video: https://youtu.be/1HFVEPgfIn8 
+
+### How to Play:
+1. **Start**: Press Enter to begin the game
+2. **Random Display**: The two seven-segment displays will continuously show random numbers (0-9) with random decimal points
+3. **Stop**: Press Enter again to stop and freeze the display
+4. **Challenge**: Input two numbers that multiply to equal the displayed number
+5. **Feedback**: 
+   - **Correct Answer**: LED flashes in *short-long-short-long* pattern (3 times)
+   - **Wrong Answer**: LED flashes in *long-long* pattern (3 times)
+
+### Game Features:
+
+- Supports both integers (0~99) and decimals (X.Y format)
+- Only the first display will show decimal point
+- Allows decimal inputs for multiplication
+- Continuous gameplay until user exits
+
+### Example Gameplay:
+- Display shows: `3.7` → Input: `3.7 × 1 = 3.7` ✅
+- Display shows: `24` → Input: `4 × 6 = 24` ✅  
+- Display shows: `1.5` → Input: `1.5 × 2 = 3.0` ❌
+
+

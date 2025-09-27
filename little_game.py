@@ -241,8 +241,7 @@ def multiplication_game():
 
 # 主程式區塊
 try:
-    # 先測試LED
-    print("測試LED...")
+
     led_on()
     time.sleep(1)
     led_off()
