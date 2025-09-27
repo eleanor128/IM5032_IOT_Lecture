@@ -58,36 +58,37 @@ DIGITS = {
     9: (1,1,1,1,0,1,1),  # 顯示 9
 }
 
-# 控制第一個七段顯示器每一段 a~g 是否要點亮
-def set_segments_1(a,b,c,d,e,f,g, dp=False):
+# 控制七顯示器每一段 a~g 是否要點亮
+def set_segments(monitor_number,a,b,c,d,e,f,g,dp):
     # 建立一個 dict 將每段對應到狀態
-    states = {'a':a,'b':b,'c':c,'d':d,'e':e,'f':f,'g':g,'dp':dp}
+    states_1 = {'a':a,'b':b,'c':c,'d':d,'e':e,'f':f,'g':g, 'dp':dp}
+    states_2 = {'a':a,'b':b,'c':c,'d':d,'e':e,'f':f,'g':g}
+
     # 對每一段的腳位設定 HIGH（亮）或 LOW（滅）
-    for seg, val in states.items():
-        GPIO.output(SEG_PINS_1[seg], GPIO.HIGH if val else GPIO.LOW)
 
-# 控制第二個七段顯示器每一段 a~g 是否要點亮
-def set_segments_2(a,b,c,d,e,f,g =False):
-    # 建立一個 dict 將每段對應到狀態（不包含dp）
-    states = {'a':a,'b':b,'c':c,'d':d,'e':e,'f':f,'g':g}
-    # 對每一段的腳位設定 HIGH（亮）或 LOW（滅）
-    for seg, val in states.items():
-        GPIO.output(SEG_PINS_2[seg], GPIO.HIGH if val else GPIO.LOW)
+    # 左邊的顯示器
+    if monitor_number == 1: 
+        for seg, val in states_1.items():
+            GPIO.output(SEG_PINS_1[seg], GPIO.HIGH if val else GPIO.LOW)
 
-# 顯示某個數字 (0~9) 在第一個顯示器
-def show_digit_1(n, dp=False):
-    pattern = DIGITS.get(n, (0,0,0,0,0,0,0,0))  # 取出對應段碼，預設全部熄滅
-    set_segments_1(*pattern, dp=dp)  # 解包元組並傳給 set_segments_1
+    # 右邊的顯示器
+    if monitor_number == 2: 
+        for seg, val in states_2.items():
+            GPIO.output(SEG_PINS_2[seg], GPIO.HIGH if val else GPIO.LOW)
 
-# 顯示某個數字 (0~9) 在第二個顯示器
-def show_digit_2(n, dp=False):
+# 顯示某個數字 (0~9)
+def show_digit(monitor_number, n, dp=False):
     pattern = DIGITS.get(n, (0,0,0,0,0,0,0))  # 取出對應段碼，預設全部熄滅
-    set_segments_2(*pattern, dp=dp)  # 解包元組並傳給 set_segments_2
+    if monitor_number == 1:
+        set_segments(1, *pattern, dp)  # 為monitor 1添加dp參數
+    elif monitor_number == 2:
+        set_segments(2, *pattern, False)  # monitor 2沒有dp，固定為False 
 
 # 熄滅所有段位（全部 LOW）
 def all_off():
-    set_segments_1(0,0,0,0,0,0,0)
-    set_segments_2(0,0,0,0,0,0,0)
+    set_segments(1, 0, 0, 0, 0, 0, 0, 0, False)  # monitor 1，包含dp
+    set_segments(2, 0, 0, 0, 0, 0, 0, 0, False)  # monitor 2，dp參數會被忽略
+
 
 # LED控制函數
 def led_on():
@@ -118,8 +119,8 @@ def random_display():
         current_dp1 = random.choice([True, False])  # 只有第一個顯示器有小數點
         current_dp2 = False  # 第二個顯示器沒有小數點
         
-        show_digit_1(current_digit1, current_dp1)
-        show_digit_2(current_digit2, current_dp2)  # dp參數會被忽略
+        show_digit(1, current_digit1, current_dp1)  
+        show_digit(2, current_digit2, current_dp2)  
         time.sleep(0.1)  # 快速變化
 
 def get_displayed_number():
@@ -166,16 +167,13 @@ def led_wrong_pattern():
         led_off()
         time.sleep(0.3)
 
-def wait_for_space():
-    """等待空白鍵按下"""
-    print("按下空白鍵+Enter繼續...")
-    while True:
-        try:
-            user_input = input().strip()
-            if user_input == " " or user_input == "":
-                break
-        except:
-            break
+def wait_for_enter():
+    """等待 Enter 鍵按下"""
+    print("按下 Enter 繼續...")
+    try:
+        input()
+    except:
+        pass
 
 def multiplication_game():
     """主要的乘法遊戲"""
@@ -185,10 +183,11 @@ def multiplication_game():
     print("🎮 數字乘法遊戲 🎮")
     print("=" * 50)
     print("遊戲規則:")
-    print("按下空白鍵開始後兩個顯示器持續隨機顯示亂數，包含dp也是隨機，再按下空白鍵之後就會馬上暫停留在剛剛顯示的數字")
+    print("按下 Enter 開始後兩個顯示器持續隨機顯示亂數，包含小數點也是隨機，再按下 Enter 之後就會馬上暫停留在剛剛顯示的數字")
+    print("然後輸入兩個數字相乘等於此數(可以是小數)")
     print("=" * 50)
     
-    wait_for_space()
+    wait_for_enter()
     
     # 開始隨機顯示
     game_running = True
@@ -197,9 +196,9 @@ def multiplication_game():
     display_thread.start()
     
     print("🎲 數字正在隨機變化中...")
-    print("再按一次空白鍵停止!")
+    print("再按一次 Enter 停止!")
     
-    wait_for_space()
+    wait_for_enter()
     
     # 停止隨機顯示
     game_running = False
@@ -242,22 +241,6 @@ def multiplication_game():
     
     print("\n" + "=" * 50)
 
-# 每段依序點亮，用來測試段是否正常（測試第一個顯示器）
-def segment_walk_1(delay=0.25):
-    for seg in ['a','b','c','d','e','f','g']:
-        all_off()  # 每次先全部熄滅
-        GPIO.output(SEG_PINS_1[seg], GPIO.HIGH)  # 點亮當前這一段（共陰極：HIGH=亮）
-        time.sleep(delay)  # 停留一段時間再換下一段
-    all_off()
-
-# 每段依序點亮，用來測試段是否正常（測試第二個顯示器）
-def segment_walk_2(delay=0.25):
-    for seg in ['a','b','c','d','e','f','g']:
-        all_off()  # 每次先全部熄滅
-        GPIO.output(SEG_PINS_2[seg], GPIO.HIGH)  # 點亮當前這一段（共陰極：HIGH=亮）
-        time.sleep(delay)  # 停留一段時間再換下一段
-    all_off()
-
 # 主程式區塊
 try:
     # 先測試LED
@@ -266,12 +249,6 @@ try:
     time.sleep(1)
     led_off()
     time.sleep(1)
-    
-    # 先跑一次每段測試（每段亮 0.3 秒）
-    print("測試第一個七段顯示器...")
-    segment_walk_1(0.3)
-    print("測試第二個七段顯示器...")
-    segment_walk_2(0.3)
 
     # 開始遊戲循環
     while True:
