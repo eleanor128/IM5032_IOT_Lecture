@@ -27,6 +27,34 @@ def center_servo():
     time.sleep(1)  # 等待馬達到達位置
     print("馬達已置中！")
 
+# 獲取最小pulse width函數
+def get_min_pulse_width():
+    """
+    獲取最小pulse width (對應0度)
+    返回: 最小pulse width值 (毫秒)
+    """
+    # 0度對應的duty cycle = 2.5%
+    # PWM頻率 = 50Hz，週期 = 20ms
+    # pulse width = duty cycle * 週期
+    min_duty_cycle = 2.5
+    period_ms = 1000 / 50  # 20ms
+    min_pulse_width = (min_duty_cycle / 100) * period_ms
+    return min_pulse_width
+
+# 獲取最大pulse width函數  
+def get_max_pulse_width():
+    """
+    獲取最大pulse width (對應180度)
+    返回: 最大pulse width值 (毫秒)
+    """
+    # 180度對應的duty cycle = 12.5%
+    # PWM頻率 = 50Hz，週期 = 20ms
+    # pulse width = duty cycle * 週期
+    max_duty_cycle = 12.5
+    period_ms = 1000 / 50  # 20ms
+    max_pulse_width = (max_duty_cycle / 100) * period_ms
+    return max_pulse_width
+
 # 初始化並置中
 p.start(7.5)  # 從置中位置開始 (90度)
 print("伺服馬達初始化...")
@@ -34,6 +62,12 @@ time.sleep(1)
 
 # 先設定馬達置中
 center_servo()
+
+# 顯示pulse width資訊
+print(f"最小 Pulse Width (0度): {get_min_pulse_width():.2f} ms")
+print(f"最大 Pulse Width (180度): {get_max_pulse_width():.2f} ms")
+print(f"範圍: {get_min_pulse_width():.2f} - {get_max_pulse_width():.2f} ms")
+print()
 
 try:
     print("開始馬達測試...")
@@ -50,7 +84,7 @@ try:
         time.sleep(1)
         
         print("移動到 180度...")
-        set_servo_angle(190)
+        set_servo_angle(180)
         time.sleep(1)
         
         print("回到 90度 (置中)...")
