@@ -15,7 +15,7 @@ def set_servo_angle(angle):
     """
     # 將角度轉換為duty cycle
     # 0度 = 2.5%, 90度 = 7.5%, 180度 = 12.5%
-    duty_cycle = 2.0 + (angle / 180.0) * 10
+    duty_cycle = 2.5 + (angle / 180.0) * 10
     p.ChangeDutyCycle(duty_cycle)
     time.sleep(0.1)  # 給馬達時間移動
 
