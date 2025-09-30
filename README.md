@@ -51,5 +51,3 @@ Demo video: https://youtu.be/1HFVEPgfIn8
 - Display shows: `3.7` → Input: `3.7 × 1 = 3.7` ✅
 - Display shows: `24` → Input: `4 × 6 = 24` ✅  
 - Display shows: `1.5` → Input: `1.5 × 2 = 3.0` ❌
-
-
