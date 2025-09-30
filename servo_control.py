@@ -50,7 +50,7 @@ try:
         time.sleep(1)
         
         print("移動到 180度...")
-        set_servo_angle(180)
+        set_servo_angle(185)
         time.sleep(1)
         
         print("回到 90度 (置中)...")
