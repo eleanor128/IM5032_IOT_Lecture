@@ -1,7 +1,7 @@
 from gpiozero import MotionSensor
 from time import sleep
 
-pir = MotionSensor(2)  # GPIO 2
+pir = MotionSensor(17)  # GPIO 2
 
 print("PIR sensor ready...")
 
