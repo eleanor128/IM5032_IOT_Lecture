@@ -1,0 +1,12 @@
+from gpiozero import MotionSensor
+from time import sleep
+
+pir = MotionSensor(2)  # GPIO 2
+
+print("PIR sensor ready...")
+
+while True:
+    pir.wait_for_motion()
+    print("⚡ Move detected!!")
+    pir.wait_for_no_motion()
+    print("😴 No movement.")
