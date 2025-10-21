@@ -41,23 +41,28 @@ def get_calibrated_duty_cycle(target_angle):
     return 7.30  # 預設值
 
 def duty_cycle_to_servo_value(duty_cycle):
-    """將 duty cycle 轉換為 gpiozero Servo 的值 (-1 到 1)"""
-    # 線性映射: duty_cycle 12.60% -> -1, 2.20% -> 1
-    if duty_cycle >= 12.60:
+    """將 duty cycle 轉換為 gpiozero Servo 的值 (-1 到 1) - SG90 專用"""
+    # SG90 標準: 1ms = 0度, 1.5ms = 90度, 2ms = 180度
+    pulse_width_ms = (duty_cycle / 100) * 20
+    
+    if pulse_width_ms >= 2.52:
         return -1.0
-    elif duty_cycle <= 2.20:
+    elif pulse_width_ms <= 0.44:
         return 1.0
     else:
-        servo_value = -1 + 2 * (12.60 - duty_cycle) / (12.60 - 2.20)
+        normalized = (2.52 - pulse_width_ms) / (2.52 - 0.44)
+        servo_value = -1 + 2 * normalized
         return max(-1, min(1, servo_value))
 
 def angle_to_servo_value(angle):
-    """將角度轉換為 gpiozero Servo 的值"""
-    duty_cycle = get_calibrated_duty_cycle(angle)
-    return duty_cycle_to_servo_value(duty_cycle)
+    """將角度轉換為 gpiozero Servo 的值 - 直接映射法"""
+    # 直接將角度映射到 servo 值
+    # 0度 -> -1 (左邊), 90度 -> 0 (中間), 180度 -> +1 (右邊)
+    servo_value = -1 + (angle / 180.0) * 2
+    return max(-1, min(1, servo_value))
 
-# GPIO 設定
-servo = Servo(13)  # GPIO 13
+# GPIO 設定 - SG90 伺服馬達專用設定 (0度=左邊，180度=右邊)
+servo = Servo(13, min_pulse_width=0.5/1000, max_pulse_width=2.5/1000)  # 調整脈衝範圍
 led = LED(26)      # GPIO 26
 
 def set_servo_angle(angle):
@@ -88,9 +93,11 @@ def led_blink(times=3, delay=0.5):
         time.sleep(delay)
 
 # 初始化
-print("硬體初始化完成 (gpiozero):")
-print(f"伺服馬達: GPIO 13")
-print(f"LED 燈: GPIO 26")
+print("硬體初始化完成 (gpiozero + SG90):")
+print(f"🤖 Raspberry Pi 4 4GB + Raspbian Buster")
+print(f"📍 SG90 伺服馬達: GPIO 13")
+print(f"💡 LED 燈: GPIO 26")
+print(f"🔧 SG90 脈衝範圍: 1-2ms")
 
 # 馬達置中
 print("馬達置中...")

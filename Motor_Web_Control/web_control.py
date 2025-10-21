@@ -47,25 +47,31 @@ def get_calibrated_duty_cycle(target_angle):
     return 7.30  # 預設值 (90度的校準值)
 
 def duty_cycle_to_servo_value(duty_cycle):
-    """將 duty cycle 轉換為 gpiozero Servo 的值 (-1 到 1)"""
-    # gpiozero Servo: -1 = 0度, 0 = 90度, 1 = 180度
+    """將 duty cycle 轉換為 gpiozero Servo 的值 (-1 到 1) - SG90 優化版"""
+    # SG90 規格: 1ms = 0度(-1), 1.5ms = 90度(0), 2ms = 180度(+1)
     # 我們的校準資料: 12.60% = 0度, 7.30% = 90度, 2.20% = 180度
     
-    # 將 duty cycle 映射到角度，再轉換為 servo 值
-    if duty_cycle >= 12.60:
+    # 校準資料轉換為脈衝寬度 (ms)
+    pulse_width_ms = (duty_cycle / 100) * 20  # 20ms 週期
+    
+    # SG90 脈衝寬度映射到 servo 值
+    if pulse_width_ms >= 2.52:  # 對應 12.60%
         return -1.0  # 0度
-    elif duty_cycle <= 2.20:
+    elif pulse_width_ms <= 0.44:  # 對應 2.20%
         return 1.0   # 180度
     else:
-        # 線性映射
-        # duty_cycle 從 12.60 到 2.20 對應 servo_value 從 -1 到 1
-        servo_value = -1 + 2 * (12.60 - duty_cycle) / (12.60 - 2.20)
+        # 線性映射到 SG90 的 1ms-2ms 範圍
+        # 將校準的脈衝寬度映射到標準 SG90 範圍
+        normalized = (2.52 - pulse_width_ms) / (2.52 - 0.44)
+        servo_value = -1 + 2 * normalized
         return max(-1, min(1, servo_value))
 
 def angle_to_servo_value(angle):
-    """將角度轉換為 gpiozero Servo 的值"""
-    duty_cycle = get_calibrated_duty_cycle(angle)
-    return duty_cycle_to_servo_value(duty_cycle)
+    """將角度轉換為 gpiozero Servo 的值 - 直接映射法"""
+    # 直接將角度映射到 servo 值
+    # 0度 -> -1 (左邊), 90度 -> 0 (中間), 180度 -> +1 (右邊)
+    servo_value = -1 + (angle / 180.0) * 2
+    return max(-1, min(1, servo_value))
 
 # GPIO 設定
 servoPIN = 13          # GPIO 13
@@ -73,15 +79,16 @@ ledPIN = 26
 current_angle = 90
 led_brightness = 0  # LED 亮度 (0-100)
 
-# 初始化 gpiozero 元件
-servo = Servo(servoPIN)  # GPIO 13 伺服馬達
+# 初始化 gpiozero 元件 (針對 SG90 優化)
+# SG90 伺服馬達規格: 脈衝寬度 1ms-2ms, 週期 20ms
+servo = Servo(servoPIN, min_pulse_width=0.5/1000, max_pulse_width=2.5/1000)  # GPIO 13
 led_pwm = PWMLED(ledPIN)  # GPIO 26 LED (PWM 控制)
 
 # 控制鎖，防止同時操作
 control_lock = threading.Lock()
 
 def set_servo_angle(angle):
-    """設定伺服馬達角度 (0-180度) - 使用 gpiozero"""
+    """設定伺服馬達角度 (0-180度) - SG90 優化版"""
     global current_angle
     
     with control_lock:
@@ -93,10 +100,11 @@ def set_servo_angle(angle):
         current_angle = angle
         
         duty_cycle = get_calibrated_duty_cycle(angle)
-        print(f"🎯 設定角度 {angle}° (servo值: {servo_value:.3f}, 等效PWM: {duty_cycle:.2f}%)")
+        pulse_width = (duty_cycle / 100) * 20
+        print(f"🎯 SG90 設定角度 {angle}° (servo值: {servo_value:.3f}, 脈衝: {pulse_width:.2f}ms)")
         
-        # 等待馬達到達位置
-        time.sleep(0.8)
+        # SG90 響應較快，稍微減少等待時間
+        time.sleep(0.6)
 
 def set_led_brightness(brightness):
     """設定 LED 亮度 (0-100) - 使用 gpiozero"""
@@ -260,7 +268,8 @@ def cleanup():
 if __name__ == '__main__':
     try:
         print("🚀 Flask 伺服馬達和 LED 控制伺服器啟動")
-        print("📍 伺服馬達: GPIO 13 (gpiozero Servo)")
+        print("🤖 硬體: Raspberry Pi 4 4GB + Raspbian Buster")
+        print("📍 伺服馬達: SG90 on GPIO 13 (gpiozero)")
         print("💡 LED 燈: GPIO 26 (gpiozero PWMLED)")
         print("🌐 網址: http://localhost:5000")
         print("🛑 按 Ctrl+C 停止伺服器")
