@@ -265,33 +265,6 @@ def adjust_pulse_width():
     
     except ValueError:
         print("❌ 請輸入有效的數值")
-    """調整脈波寬度參數"""
-    global current_min_pulse, current_max_pulse
-    
-    print(f"\n⚙️ 當前脈波範圍: {current_min_pulse:.1f}ms - {current_max_pulse:.1f}ms")
-    print("調整脈波寬度參數 (輸入 0 跳過)")
-    
-    try:
-        min_input = input(f"新的最小脈波寬度 (當前: {current_min_pulse:.1f}ms): ").strip()
-        if min_input and min_input != '0':
-            new_min = float(min_input)
-            if 0.1 <= new_min <= 1.0:
-                current_min_pulse = new_min
-                print(f"✅ 最小脈波寬度更新為: {current_min_pulse:.1f}ms")
-            else:
-                print("❌ 最小脈波寬度應在 0.1-1.0ms 之間")
-        
-        max_input = input(f"新的最大脈波寬度 (當前: {current_max_pulse:.1f}ms): ").strip()
-        if max_input and max_input != '0':
-            new_max = float(max_input)
-            if 2.0 <= new_max <= 3.0:
-                current_max_pulse = new_max
-                print(f"✅ 最大脈波寬度更新為: {current_max_pulse:.1f}ms")
-            else:
-                print("❌ 最大脈波寬度應在 2.0-3.0ms 之間")
-    
-    except ValueError:
-        print("❌ 請輸入有效的數值")
 
 def create_servo():
     """創建伺服物件"""
