@@ -11,9 +11,11 @@ p = GPIO.PWM(servoPIN, 50)  # GPIO 14, 50Hz
 # 伺服馬達角度控制函數
 def set_servo_angle(angle):
     """設定伺服馬達角度 (0-180度)"""
-    duty_cycle = 2.5 + (angle / 180.0) * 10
+    # 反轉角度：0度在左邊，180度在右邊
+    reversed_angle = 180 - angle
+    duty_cycle = 2.5 + (reversed_angle / 180.0) * 10
     p.ChangeDutyCycle(duty_cycle)
-    print(f"馬達轉到 {angle}度")
+    print(f"馬達轉到 {angle}度 (左0°-右180°)")
     time.sleep(1)
 
 # 初始化
