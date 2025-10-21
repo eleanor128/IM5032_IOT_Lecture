@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>伺服馬達和 LED 控制</title>
+    <title>智慧語音控制 - 伺服馬達和 LED</title>
     <style>
         * {
             margin: 0;
@@ -19,7 +19,7 @@
         }
 
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
             background: white;
             border-radius: 15px;
@@ -30,46 +30,177 @@
         .header {
             background: linear-gradient(45deg, #4CAF50, #45a049);
             color: white;
-            padding: 30px;
+            padding: 20px;
             text-align: center;
         }
 
         .header h1 {
-            font-size: 2.5em;
-            margin-bottom: 10px;
+            font-size: 2.2em;
+            margin-bottom: 5px;
         }
 
-        .status-bar {
-            background: #f8f9fa;
-            padding: 20px;
-            border-bottom: 1px solid #dee2e6;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        /* 語音控制區域 - 橫跨整個寬度 */
+        .voice-control-section {
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+            color: white;
+            padding: 30px;
+            margin: 0;
         }
 
-        .status-item {
+        .voice-control {
+            text-align: center;
+        }
+
+        .voice-control h2 {
+            font-size: 1.8em;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 10px;
         }
 
-        .status-value {
-            font-weight: bold;
+        .voice-button {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 4px solid white;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            font-size: 3em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .voice-button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+
+        .voice-button.listening {
+            background: rgba(255,255,255,0.4);
+            animation: pulse 1.5s infinite;
+            box-shadow: 0 0 30px rgba(255,255,255,0.5);
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .voice-status {
             font-size: 1.2em;
+            margin-top: 15px;
+            min-height: 30px;
+        }
+
+        .voice-commands {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 20px;
+            text-align: left;
+        }
+
+        .command-item {
+            background: rgba(255,255,255,0.1);
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 0.9em;
+        }
+
+        /* 主要控制區域 - 兩欄布局 */
+        .main-controls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+        }
+
+        .control-panel {
+            padding: 30px;
+            border-right: 1px solid #dee2e6;
+        }
+
+        .control-panel:last-child {
+            border-right: none;
+        }
+
+        .control-panel h3 {
+            color: #333;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #4CAF50;
+            font-size: 1.5em;
+        }
+
+        /* 角度控制樣式 */
+        .angle-display {
+            font-size: 4em;
+            font-weight: bold;
+            color: #4CAF50;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .angle-slider {
+            width: 100%;
+            height: 12px;
+            border-radius: 6px;
+            background: linear-gradient(to right, #ff4757, #ffa502, #2ed573);
+            outline: none;
+            margin: 20px 0;
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        /* LED 控制樣式 */
+        .brightness-display {
+            font-size: 4em;
+            font-weight: bold;
+            color: #ffc107;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .brightness-slider {
+            width: 100%;
+            height: 12px;
+            border-radius: 6px;
+            background: linear-gradient(to right, #2c2c2c, #ffff00);
+            outline: none;
+            margin: 20px 0;
+        }
+
+        .led-controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-top: 20px;
         }
 
         .led-indicator {
-            width: 20px;
-            height: 20px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            border: 2px solid #ccc;
+            border: 3px solid #ccc;
+            margin: 0 auto 15px;
             transition: all 0.3s ease;
         }
 
         .led-on {
             background: #ff4444;
-            box-shadow: 0 0 10px #ff4444;
+            box-shadow: 0 0 20px #ff4444;
             border-color: #ff4444;
         }
 
@@ -77,72 +208,17 @@
             background: #ccc;
         }
 
-        .brightness-slider {
-            width: 100%;
-            height: 10px;
-            border-radius: 5px;
-            background: linear-gradient(to right, #000, #ffff00);
-            outline: none;
-            margin: 20px 0;
-        }
-
-        .brightness-display {
-            font-size: 2em;
-            font-weight: bold;
-            color: #ffc107;
-            margin: 10px 0;
-        }
-
-        .controls {
-            padding: 30px;
-        }
-
-        .control-section {
-            margin-bottom: 40px;
-        }
-
-        .control-section h2 {
-            color: #333;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #4CAF50;
-        }
-
-        .servo-control {
-            text-align: center;
-        }
-
-        .angle-slider {
-            width: 100%;
-            height: 10px;
-            border-radius: 5px;
-            background: #ddd;
-            outline: none;
-            margin: 20px 0;
-        }
-
-        .angle-display {
-            font-size: 3em;
-            font-weight: bold;
-            color: #4CAF50;
-            margin: 20px 0;
-        }
-
-        .preset-buttons {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-
+        /* 按鈕樣式 */
         .btn {
-            padding: 15px 25px;
+            padding: 12px 20px;
             border: none;
             border-radius: 8px;
-            font-size: 16px;
+            font-size: 14px;
             cursor: pointer;
             transition: all 0.3s ease;
             font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .btn-primary {
@@ -153,16 +229,7 @@
         .btn-primary:hover {
             background: #45a049;
             transform: translateY(-2px);
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #5a6268;
-            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
         }
 
         .btn-warning {
@@ -173,6 +240,7 @@
         .btn-warning:hover {
             background: #e0a800;
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3);
         }
 
         .btn-danger {
@@ -183,20 +251,40 @@
         .btn-danger:hover {
             background: #c82333;
             transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
         }
 
-        .led-controls {
+        /* 狀態列 */
+        .status-bar {
+            background: #f8f9fa;
+            padding: 15px 30px;
+            border-top: 1px solid #dee2e6;
             display: flex;
-            gap: 20px;
-            justify-content: center;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: bold;
         }
 
         .message {
-            margin-top: 20px;
-            padding: 15px;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
             border-radius: 8px;
-            text-align: center;
             font-weight: bold;
+            z-index: 1000;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .message.show {
+            transform: translateX(0);
         }
 
         .message.success {
@@ -211,101 +299,251 @@
             border: 1px solid #f5c6cb;
         }
 
+        /* 響應式設計 */
         @media (max-width: 768px) {
-            .container {
-                margin: 10px;
+            .main-controls {
+                grid-template-columns: 1fr;
             }
 
-            .header h1 {
-                font-size: 2em;
+            .control-panel {
+                border-right: none;
+                border-bottom: 1px solid #dee2e6;
             }
 
-            .angle-display {
-                font-size: 2em;
+            .control-panel:last-child {
+                border-bottom: none;
             }
 
-            .status-bar {
-                flex-direction: column;
-                gap: 10px;
+            .voice-commands {
+                grid-template-columns: 1fr;
+            }
+
+            .angle-display,
+            .brightness-display {
+                font-size: 3em;
+            }
+
+            .voice-button {
+                width: 100px;
+                height: 100px;
+                font-size: 2.5em;
             }
         }
     </style>
 </head>
 <body>
     <div class="container">
+        <!-- 標題 -->
         <div class="header">
-            <h1>🎯 伺服馬達 & LED 控制</h1>
-            <p>樹莓派 GPIO 控制介面</p>
+            <h1>�️ 智慧語音控制系統</h1>
+            <p>伺服馬達 & LED 語音控制介面</p>
         </div>
 
+        <!-- 語音控制區域 - 橫跨整個寬度 -->
+        <div class="voice-control-section">
+            <div class="voice-control">
+                <h2>� 語音命令控制</h2>
+                
+                <div class="voice-button" id="voice-button" onclick="toggleVoiceRecognition()">
+                    🎤
+                </div>
+                
+                <div class="voice-status" id="voice-status">
+                    點擊麥克風開始語音控制
+                </div>
+                
+                <div class="voice-commands">
+                    <div class="command-item">� "轉到90度" - 設定角度</div>
+                    <div class="command-item">📢 "轉到中間" - 中心位置</div>
+                    <div class="command-item">📢 "LED開啟" - 開燈</div>
+                    <div class="command-item">📢 "LED關閉" - 關燈</div>
+                    <div class="command-item">📢 "亮度50" - 設定亮度</div>
+                    <div class="command-item">📢 "掃描模式" - 自動掃描</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 主要控制區域 - 兩欄布局 -->
+        <div class="main-controls">
+            <!-- 左欄：角度控制 -->
+            <div class="control-panel">
+                <h3>🎛️ 伺服馬達控制</h3>
+                
+                <div class="angle-display" id="angle-display">{{ current_angle }}°</div>
+                
+                <input type="range" 
+                       class="angle-slider" 
+                       id="angle-slider" 
+                       min="0" 
+                       max="180" 
+                       value="{{ current_angle }}" 
+                       oninput="updateAngleDisplay(this.value)">
+                
+                <div class="preset-buttons">
+                    <button class="btn btn-primary" onclick="setAngle(0)">🎯 右邊 (0°)</button>
+                    <button class="btn btn-primary" onclick="setAngle(45)">🎯 右中 (45°)</button>
+                    <button class="btn btn-primary" onclick="setAngle(90)">🎯 中間 (90°)</button>
+                    <button class="btn btn-primary" onclick="setAngle(135)">🎯 左中 (135°)</button>
+                    <button class="btn btn-primary" onclick="setAngle(180)">🎯 左邊 (180°)</button>
+                    <button class="btn btn-warning" onclick="presetAction('sweep')">🔄 掃描</button>
+                </div>
+            </div>
+
+            <!-- 右欄：LED控制 -->
+            <div class="control-panel">
+                <h3>💡 LED 亮度控制</h3>
+                
+                <div class="led-indicator" id="led-indicator"></div>
+                <div class="brightness-display" id="brightness-display">{{ led_brightness }}%</div>
+                
+                <input type="range" 
+                       class="brightness-slider" 
+                       id="brightness-slider" 
+                       min="0" 
+                       max="100" 
+                       value="{{ led_brightness }}" 
+                       oninput="updateBrightnessDisplay(this.value)">
+                
+                <div class="led-controls">
+                    <button class="btn btn-danger" onclick="setBrightness(0)">💡 關閉</button>
+                    <button class="btn btn-primary" onclick="setBrightness(25)">🌑 暗</button>
+                    <button class="btn btn-primary" onclick="setBrightness(50)">🌓 中</button>
+                    <button class="btn btn-primary" onclick="setBrightness(75)">🌕 亮</button>
+                    <button class="btn btn-primary" onclick="setBrightness(100)">☀️ 最亮</button>
+                    <button class="btn btn-warning" onclick="presetAction('led_blink')">✨ 閃爍</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 狀態列 -->
         <div class="status-bar">
             <div class="status-item">
-                <span>🎛️ 馬達角度:</span>
-                <span class="status-value" id="current-angle">{{ current_angle }}°</span>
+                <span>🎛️ 當前角度:</span>
+                <span id="current-angle">{{ current_angle }}°</span>
             </div>
             <div class="status-item">
                 <span>💡 LED 亮度:</span>
-                <div class="led-indicator" id="led-indicator"></div>
-                <span class="status-value" id="led-brightness">{{ led_brightness }}%</span>
+                <span id="led-brightness-status">{{ led_brightness }}%</span>
             </div>
-        </div>
-
-        <div class="controls">
-            <!-- 伺服馬達控制 -->
-            <div class="control-section">
-                <h2>🎛️ 伺服馬達控制 (GPIO 13)</h2>
-                <div class="servo-control">
-                    <div class="angle-display" id="angle-display">{{ current_angle }}°</div>
-                    <input type="range" 
-                           class="angle-slider" 
-                           id="angle-slider" 
-                           min="0" 
-                           max="180" 
-                           value="{{ current_angle }}" 
-                           oninput="updateAngleDisplay(this.value)">
-                    
-                    <div class="preset-buttons">
-                        <button class="btn btn-primary" onclick="setAngle(0)">🎯 左邊 (0°)</button>
-                        <button class="btn btn-primary" onclick="setAngle(45)">🎯 左中 (45°)</button>
-                        <button class="btn btn-primary" onclick="setAngle(90)">🎯 中間 (90°)</button>
-                        <button class="btn btn-primary" onclick="setAngle(135)">🎯 右中 (135°)</button>
-                        <button class="btn btn-primary" onclick="setAngle(180)">🎯 右邊 (180°)</button>
-                        <button class="btn btn-warning" onclick="presetAction('sweep')">🔄 掃描</button>
-                    </div>
-                </div>
+            <div class="status-item">
+                <span>📍 GPIO:</span>
+                <span>伺服=13, LED=26</span>
             </div>
-
-            <!-- LED 控制 -->
-            <div class="control-section">
-                <h2>💡 LED 亮度控制 (GPIO 26)</h2>
-                <div class="servo-control">
-                    <div class="brightness-display" id="brightness-display">{{ led_brightness }}%</div>
-                    <input type="range" 
-                           class="brightness-slider" 
-                           id="brightness-slider" 
-                           min="0" 
-                           max="100" 
-                           value="{{ led_brightness }}" 
-                           oninput="updateBrightnessDisplay(this.value)">
-                    
-                    <div class="led-controls">
-                        <button class="btn btn-primary" onclick="setBrightness(0)">💡 關閉</button>
-                        <button class="btn btn-primary" onclick="setBrightness(25)">🌑 暗</button>
-                        <button class="btn btn-primary" onclick="setBrightness(50)">🌓 中</button>
-                        <button class="btn btn-primary" onclick="setBrightness(75)">🌕 亮</button>
-                        <button class="btn btn-primary" onclick="setBrightness(100)">☀️ 最亮</button>
-                        <button class="btn btn-warning" onclick="presetAction('led_blink')">✨ 閃爍</button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="message"></div>
         </div>
     </div>
+
+    <div id="message"></div>
 
     <script>
         let currentAngle = {{ current_angle }};
         let ledBrightness = {{ led_brightness }};
+        let recognition = null;
+        let isListening = false;
+
+        // 初始化語音識別
+        function initSpeechRecognition() {
+            if ('webkitSpeechRecognition' in window) {
+                recognition = new webkitSpeechRecognition();
+                recognition.continuous = false;
+                recognition.lang = 'zh-TW';
+                recognition.interimResults = false;
+                recognition.maxAlternatives = 1;
+
+                recognition.onstart = function() {
+                    isListening = true;
+                    document.getElementById('voice-button').classList.add('listening');
+                    document.getElementById('voice-status').textContent = '🎤 正在聆聽...';
+                };
+
+                recognition.onresult = function(event) {
+                    const command = event.results[0][0].transcript.toLowerCase();
+                    document.getElementById('voice-status').textContent = `識別到：${command}`;
+                    processVoiceCommand(command);
+                };
+
+                recognition.onerror = function(event) {
+                    document.getElementById('voice-status').textContent = '語音識別錯誤，請重試';
+                    stopListening();
+                };
+
+                recognition.onend = function() {
+                    stopListening();
+                };
+            } else {
+                document.getElementById('voice-status').textContent = '瀏覽器不支援語音識別';
+            }
+        }
+
+        function toggleVoiceRecognition() {
+            if (!recognition) {
+                initSpeechRecognition();
+            }
+
+            if (isListening) {
+                recognition.stop();
+            } else {
+                recognition.start();
+            }
+        }
+
+        function stopListening() {
+            isListening = false;
+            document.getElementById('voice-button').classList.remove('listening');
+            setTimeout(() => {
+                document.getElementById('voice-status').textContent = '點擊麥克風開始語音控制';
+            }, 3000);
+        }
+
+        function processVoiceCommand(command) {
+            console.log('處理語音命令:', command);
+            
+            // 角度控制命令
+            if (command.includes('轉到') || command.includes('角度')) {
+                const angleMatch = command.match(/(\d+)/);
+                if (angleMatch) {
+                    const angle = parseInt(angleMatch[1]);
+                    if (angle >= 0 && angle <= 180) {
+                        setAngle(angle);
+                        return;
+                    }
+                }
+            }
+
+            // 預設位置命令
+            if (command.includes('中間') || command.includes('中心')) {
+                setAngle(90);
+            } else if (command.includes('左邊')) {
+                setAngle(180);
+            } else if (command.includes('右邊')) {
+                setAngle(0);
+            }
+
+            // LED 控制命令
+            if (command.includes('led') || command.includes('燈')) {
+                if (command.includes('開') || command.includes('打開')) {
+                    setBrightness(100);
+                } else if (command.includes('關') || command.includes('關閉')) {
+                    setBrightness(0);
+                }
+            }
+
+            // 亮度控制命令
+            if (command.includes('亮度')) {
+                const brightnessMatch = command.match(/(\d+)/);
+                if (brightnessMatch) {
+                    const brightness = parseInt(brightnessMatch[1]);
+                    if (brightness >= 0 && brightness <= 100) {
+                        setBrightness(brightness);
+                        return;
+                    }
+                }
+            }
+
+            // 掃描命令
+            if (command.includes('掃描')) {
+                presetAction('sweep');
+            }
+        }
 
         function updateAngleDisplay(angle) {
             document.getElementById('angle-display').textContent = angle + '°';
@@ -371,7 +609,7 @@
 
         function updateLEDStatus() {
             const indicator = document.getElementById('led-indicator');
-            const brightnessText = document.getElementById('led-brightness');
+            const brightnessText = document.getElementById('led-brightness-status');
             
             brightnessText.textContent = ledBrightness + '%';
             
@@ -413,10 +651,14 @@
             const messageDiv = document.getElementById('message');
             messageDiv.textContent = text;
             messageDiv.className = 'message ' + type;
+            messageDiv.classList.add('show');
             
             setTimeout(() => {
-                messageDiv.textContent = '';
-                messageDiv.className = '';
+                messageDiv.classList.remove('show');
+                setTimeout(() => {
+                    messageDiv.textContent = '';
+                    messageDiv.className = '';
+                }, 300);
             }, 3000);
         }
 
@@ -429,8 +671,11 @@
             setBrightness(this.value);
         });
 
-        // 初始化 LED 狀態
-        updateLEDStatus();
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            updateLEDStatus();
+            initSpeechRecognition();
+        });
 
         // 定期更新狀態
         setInterval(() => {
