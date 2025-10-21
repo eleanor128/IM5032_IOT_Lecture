@@ -12,6 +12,40 @@ import threading
 
 app = Flask(__name__)
 
+# 伺服馬達校準表 (根據實際測試結果)
+SERVO_CALIBRATION = {
+    0: 12.60,
+    45: 11.00,
+    90: 7.30,
+    135: 4.50,
+    180: 2.20,
+}
+
+def get_calibrated_duty_cycle(target_angle):
+    """根據校準資料獲取角度對應的 duty cycle"""
+    if target_angle in SERVO_CALIBRATION:
+        return SERVO_CALIBRATION[target_angle]
+
+    # 線性插值
+    angles = sorted(SERVO_CALIBRATION.keys())
+
+    if target_angle <= angles[0]:
+        return SERVO_CALIBRATION[angles[0]]
+    if target_angle >= angles[-1]:
+        return SERVO_CALIBRATION[angles[-1]]
+
+    # 找到相鄰的兩個校準點
+    for i in range(len(angles) - 1):
+        if angles[i] <= target_angle <= angles[i + 1]:
+            angle1, angle2 = angles[i], angles[i + 1]
+            duty1, duty2 = SERVO_CALIBRATION[angle1], SERVO_CALIBRATION[angle2]
+
+            # 線性插值
+            ratio = (target_angle - angle1) / (angle2 - angle1)
+            return duty1 + ratio * (duty2 - duty1)
+
+    return 7.30  # 預設值 (90度的校準值)
+
 # GPIO 設定
 servoPIN = 14
 ledPIN = 26
@@ -25,7 +59,7 @@ GPIO.setup(ledPIN, GPIO.OUT)
 
 # PWM 設定
 p = GPIO.PWM(servoPIN, 50)
-p.start(7.5)  # 90度開始
+p.start(get_calibrated_duty_cycle(90))  # 使用校準的 90 度值開始
 
 # LED PWM 設定 (用於亮度控制)
 led_pwm = GPIO.PWM(ledPIN, 1000)  # 1000Hz 頻率
@@ -35,23 +69,21 @@ led_pwm.start(0)  # 從 0% 開始
 control_lock = threading.Lock()
 
 def set_servo_angle(angle):
-    """設定伺服馬達角度 (0-180度) - 優化版，減少抖動"""
+    """設定伺服馬達角度 (0-180度) - 使用校準資料"""
     global current_angle
     
     with control_lock:
-        # 反轉角度：0度在左邊，180度在右邊
-        reversed_angle = 180 - angle
-        duty_cycle = 2.5 + (reversed_angle / 180.0) * 10
+        # 使用校準資料獲取精確的 duty cycle
+        duty_cycle = get_calibrated_duty_cycle(angle)
         
         # 設定角度
         p.ChangeDutyCycle(duty_cycle)
         current_angle = angle
         
+        print(f"🎯 設定角度 {angle}° (校準 PWM: {duty_cycle:.2f}%)")
+        
         # 等待馬達到達位置
         time.sleep(0.8)
-        
-        # 停止 PWM 訊號以減少抖動 (可選)
-        # p.ChangeDutyCycle(0)
 
 def set_led_brightness(brightness):
     """設定 LED 亮度 (0-100)"""
