@@ -47,7 +47,7 @@ def get_calibrated_duty_cycle(target_angle):
     return 7.30  # 預設值 (90度的校準值)
 
 # GPIO 設定
-servoPIN = 14
+servoPIN = 13          # 改為 GPIO 13
 ledPIN = 26
 current_angle = 90
 led_brightness = 0  # LED 亮度 (0-100)
@@ -247,7 +247,7 @@ def cleanup():
 if __name__ == '__main__':
     try:
         print("🚀 Flask 伺服馬達和 LED 控制伺服器啟動")
-        print("📍 伺服馬達: GPIO 14")
+        print("📍 伺服馬達: GPIO 13")  # 更新為 GPIO 13
         print("💡 LED 燈: GPIO 26")
         print("🌐 網址: http://localhost:5000")
         print("🛑 按 Ctrl+C 停止伺服器")

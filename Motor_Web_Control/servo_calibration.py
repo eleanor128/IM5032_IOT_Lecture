@@ -10,7 +10,7 @@ import json
 from datetime import datetime
 
 # GPIO 設定
-servoPIN = 14
+servoPIN = 13  # 改為 GPIO 13
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(servoPIN, GPIO.OUT)
 
@@ -30,7 +30,7 @@ def interactive_calibration():
     """互動式校準每個角度"""
     print("🎯 伺服馬達 PWM 校準程式")
     print("=" * 50)
-    print("📍 GPIO Pin: 14")
+    print("📍 GPIO Pin: 13")  # 更新為 GPIO 13
     print("🔊 PWM 頻率: 50Hz")
     print("⚙️  標準範圍: 2.5% - 12.5% duty cycle")
     print("=" * 50)
@@ -250,7 +250,7 @@ def main():
     """主程式"""
     try:
         print("🎯 伺服馬達 PWM 校準工具")
-        print("請確保馬達已正確連接到 GPIO 14")
+        print("請確保馬達已正確連接到 GPIO 13")  # 更新為 GPIO 13
         input("按 Enter 開始校準...")
         
         # 馬達置中

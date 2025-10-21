@@ -7,7 +7,7 @@ import RPi.GPIO as GPIO
 import time
 
 # GPIO 設定
-servoPIN = 14
+servoPIN = 13  # 改為 GPIO 13
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(servoPIN, GPIO.OUT)
 
@@ -144,7 +144,7 @@ def main():
         p.start(get_calibrated_duty_cycle(90))
         
         print("🎯 伺服馬達校準測試程式")
-        print("📍 GPIO Pin: 14")
+        print("📍 GPIO Pin: 13")  # 更新為 GPIO 13
         print("⚙️  使用校準資料進行精確控制")
         
         # 初始化到中心位置

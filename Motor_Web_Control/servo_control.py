@@ -2,7 +2,7 @@ import RPi.GPIO as GPIO
 import time
 
 # 伺服馬達設定
-servoPIN = 14
+servoPIN = 13  # 改為 GPIO 13
 # LED 設定
 ledPIN = 26
 
@@ -10,7 +10,7 @@ GPIO.setmode(GPIO.BCM)
 GPIO.setup(servoPIN, GPIO.OUT)
 GPIO.setup(ledPIN, GPIO.OUT)
 
-p = GPIO.PWM(servoPIN, 50)  # GPIO 14, 50Hz
+p = GPIO.PWM(servoPIN, 50)  # GPIO 13, 50Hz
 
 print("硬體初始化完成:")
 print(f"伺服馬達: GPIO {servoPIN}")
