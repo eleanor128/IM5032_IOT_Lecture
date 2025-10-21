@@ -6,7 +6,7 @@ GPIO 26: LED 燈
 """
 
 from flask import Flask, render_template, request, jsonify
-import RPi.GPIO as GPIO
+from gpiozero import Servo, PWMLED
 import time
 import threading
 
@@ -46,52 +46,67 @@ def get_calibrated_duty_cycle(target_angle):
 
     return 7.30  # 預設值 (90度的校準值)
 
+def duty_cycle_to_servo_value(duty_cycle):
+    """將 duty cycle 轉換為 gpiozero Servo 的值 (-1 到 1)"""
+    # gpiozero Servo: -1 = 0度, 0 = 90度, 1 = 180度
+    # 我們的校準資料: 12.60% = 0度, 7.30% = 90度, 2.20% = 180度
+    
+    # 將 duty cycle 映射到角度，再轉換為 servo 值
+    if duty_cycle >= 12.60:
+        return -1.0  # 0度
+    elif duty_cycle <= 2.20:
+        return 1.0   # 180度
+    else:
+        # 線性映射
+        # duty_cycle 從 12.60 到 2.20 對應 servo_value 從 -1 到 1
+        servo_value = -1 + 2 * (12.60 - duty_cycle) / (12.60 - 2.20)
+        return max(-1, min(1, servo_value))
+
+def angle_to_servo_value(angle):
+    """將角度轉換為 gpiozero Servo 的值"""
+    duty_cycle = get_calibrated_duty_cycle(angle)
+    return duty_cycle_to_servo_value(duty_cycle)
+
 # GPIO 設定
-servoPIN = 13          # 改為 GPIO 13
+servoPIN = 13          # GPIO 13
 ledPIN = 26
 current_angle = 90
 led_brightness = 0  # LED 亮度 (0-100)
 
-# 初始化 GPIO
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(servoPIN, GPIO.OUT)
-GPIO.setup(ledPIN, GPIO.OUT)
-
-# PWM 設定
-p = GPIO.PWM(servoPIN, 50)
-p.start(get_calibrated_duty_cycle(90))  # 使用校準的 90 度值開始
-
-# LED PWM 設定 (用於亮度控制)
-led_pwm = GPIO.PWM(ledPIN, 1000)  # 1000Hz 頻率
-led_pwm.start(0)  # 從 0% 開始
+# 初始化 gpiozero 元件
+servo = Servo(servoPIN)  # GPIO 13 伺服馬達
+led_pwm = PWMLED(ledPIN)  # GPIO 26 LED (PWM 控制)
 
 # 控制鎖，防止同時操作
 control_lock = threading.Lock()
 
 def set_servo_angle(angle):
-    """設定伺服馬達角度 (0-180度) - 使用校準資料"""
+    """設定伺服馬達角度 (0-180度) - 使用 gpiozero"""
     global current_angle
     
     with control_lock:
-        # 使用校準資料獲取精確的 duty cycle
-        duty_cycle = get_calibrated_duty_cycle(angle)
+        # 使用校準資料轉換為 servo 值
+        servo_value = angle_to_servo_value(angle)
         
-        # 設定角度
-        p.ChangeDutyCycle(duty_cycle)
+        # 設定伺服馬達位置
+        servo.value = servo_value
         current_angle = angle
         
-        print(f"🎯 設定角度 {angle}° (校準 PWM: {duty_cycle:.2f}%)")
+        duty_cycle = get_calibrated_duty_cycle(angle)
+        print(f"🎯 設定角度 {angle}° (servo值: {servo_value:.3f}, 等效PWM: {duty_cycle:.2f}%)")
         
         # 等待馬達到達位置
         time.sleep(0.8)
 
 def set_led_brightness(brightness):
-    """設定 LED 亮度 (0-100)"""
+    """設定 LED 亮度 (0-100) - 使用 gpiozero"""
     global led_brightness
     
     with control_lock:
         brightness = max(0, min(100, brightness))
-        led_pwm.ChangeDutyCycle(brightness)
+        # gpiozero PWMLED 的值範圍是 0-1
+        led_value = brightness / 100.0
+        led_pwm.value = led_value
         led_brightness = brightness
 
 def led_control(state):
@@ -237,9 +252,7 @@ def cleanup():
         set_led_brightness(0)  # 關閉 LED
         set_servo_angle(90)    # 馬達回中心
         time.sleep(1)
-        p.stop()
-        led_pwm.stop()
-        GPIO.cleanup()
+        # gpiozero 會自動清理，不需要手動 cleanup
         print("GPIO 清理完成")
     except:
         pass
@@ -247,8 +260,8 @@ def cleanup():
 if __name__ == '__main__':
     try:
         print("🚀 Flask 伺服馬達和 LED 控制伺服器啟動")
-        print("📍 伺服馬達: GPIO 13")  # 更新為 GPIO 13
-        print("💡 LED 燈: GPIO 26")
+        print("📍 伺服馬達: GPIO 13 (gpiozero Servo)")
+        print("💡 LED 燈: GPIO 26 (gpiozero PWMLED)")
         print("🌐 網址: http://localhost:5000")
         print("🛑 按 Ctrl+C 停止伺服器")
         
