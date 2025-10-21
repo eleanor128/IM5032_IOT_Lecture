@@ -55,13 +55,12 @@ def duty_cycle_to_servo_value(duty_cycle):
         return max(-1, min(1, servo_value))
 
 def angle_to_servo_value(angle):
-    """將角度轉換為 gpiozero Servo 的值 - 直接映射法"""
-    # 直接將角度映射到 servo 值
-    # 0度 -> -1 (左邊), 90度 -> 0 (中間), 180度 -> +1 (右邊)
-    servo_value = -1 + (angle / 180.0) * 2
+    """將角度轉換為 gpiozero Servo 的值 - 修正方向映射法"""
+    # 修正方向：0度 -> +1 (右邊), 90度 -> 0 (中間), 180度 -> -1 (左邊)
+    servo_value = 1 - (angle / 180.0) * 2
     return max(-1, min(1, servo_value))
 
-# GPIO 設定 - SG90 伺服馬達專用設定 (0度=左邊，180度=右邊)
+# GPIO 設定 - SG90 伺服馬達專用設定 (0度=右邊，180度=左邊)
 servo = Servo(13, min_pulse_width=0.5/1000, max_pulse_width=2.5/1000)  # 調整脈衝範圍
 led = LED(26)      # GPIO 26
 

@@ -67,10 +67,9 @@ def duty_cycle_to_servo_value(duty_cycle):
         return max(-1, min(1, servo_value))
 
 def angle_to_servo_value(angle):
-    """將角度轉換為 gpiozero Servo 的值 - 直接映射法"""
-    # 直接將角度映射到 servo 值
-    # 0度 -> -1 (左邊), 90度 -> 0 (中間), 180度 -> +1 (右邊)
-    servo_value = -1 + (angle / 180.0) * 2
+    """將角度轉換為 gpiozero Servo 的值 - 修正方向映射法"""
+    # 修正方向：0度 -> +1 (右邊), 90度 -> 0 (中間), 180度 -> -1 (左邊)
+    servo_value = 1 - (angle / 180.0) * 2
     return max(-1, min(1, servo_value))
 
 # GPIO 設定
