@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>伺服馬達和 LED 控制</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .status-bar {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 1px solid #dee2e6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-value {
+            font-weight: bold;
+            font-size: 1.2em;
+        }
+
+        .led-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid #ccc;
+            transition: all 0.3s ease;
+        }
+
+        .led-on {
+            background: #ff4444;
+            box-shadow: 0 0 10px #ff4444;
+            border-color: #ff4444;
+        }
+
+        .led-off {
+            background: #ccc;
+        }
+
+        .controls {
+            padding: 30px;
+        }
+
+        .control-section {
+            margin-bottom: 40px;
+        }
+
+        .control-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #4CAF50;
+        }
+
+        .servo-control {
+            text-align: center;
+        }
+
+        .angle-slider {
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+            background: #ddd;
+            outline: none;
+            margin: 20px 0;
+        }
+
+        .angle-display {
+            font-size: 3em;
+            font-weight: bold;
+            color: #4CAF50;
+            margin: 20px 0;
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 15px 25px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: bold;
+        }
+
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #45a049;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #c82333;
+            transform: translateY(-2px);
+        }
+
+        .led-controls {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .message {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .angle-display {
+                font-size: 2em;
+            }
+
+            .status-bar {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 伺服馬達 & LED 控制</h1>
+            <p>樹莓派 GPIO 控制介面</p>
+        </div>
+
+        <div class="status-bar">
+            <div class="status-item">
+                <span>🎛️ 馬達角度:</span>
+                <span class="status-value" id="current-angle">{{ current_angle }}°</span>
+            </div>
+            <div class="status-item">
+                <span>💡 LED 狀態:</span>
+                <div class="led-indicator {{ 'led-on' if led_status else 'led-off' }}" id="led-indicator"></div>
+                <span class="status-value" id="led-status">{{ '開啟' if led_status else '關閉' }}</span>
+            </div>
+        </div>
+
+        <div class="controls">
+            <!-- 伺服馬達控制 -->
+            <div class="control-section">
+                <h2>🎛️ 伺服馬達控制 (GPIO 14)</h2>
+                <div class="servo-control">
+                    <div class="angle-display" id="angle-display">{{ current_angle }}°</div>
+                    <input type="range" 
+                           class="angle-slider" 
+                           id="angle-slider" 
+                           min="0" 
+                           max="180" 
+                           value="{{ current_angle }}" 
+                           oninput="updateAngleDisplay(this.value)">
+                    
+                    <div class="preset-buttons">
+                        <button class="btn btn-primary" onclick="setAngle(0)">🎯 左邊 (0°)</button>
+                        <button class="btn btn-primary" onclick="setAngle(90)">🎯 中間 (90°)</button>
+                        <button class="btn btn-primary" onclick="setAngle(180)">🎯 右邊 (180°)</button>
+                        <button class="btn btn-warning" onclick="presetAction('sweep')">🔄 掃描</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LED 控制 -->
+            <div class="control-section">
+                <h2>💡 LED 控制 (GPIO 26)</h2>
+                <div class="led-controls">
+                    <button class="btn btn-primary" id="led-btn" onclick="toggleLED()">
+                        💡 {{ '關閉' if led_status else '開啟' }} LED
+                    </button>
+                    <button class="btn btn-warning" onclick="presetAction('led_blink')">✨ LED 閃爍</button>
+                </div>
+            </div>
+
+            <div id="message"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentAngle = {{ current_angle }};
+        let ledStatus = {{ 'true' if led_status else 'false' }};
+
+        function updateAngleDisplay(angle) {
+            document.getElementById('angle-display').textContent = angle + '°';
+        }
+
+        function setAngle(angle) {
+            const slider = document.getElementById('angle-slider');
+            slider.value = angle;
+            updateAngleDisplay(angle);
+            
+            fetch('/api/servo', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ angle: parseInt(angle) })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentAngle = data.angle;
+                    document.getElementById('current-angle').textContent = data.angle + '°';
+                    showMessage(data.message, 'success');
+                } else {
+                    showMessage(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showMessage('網路錯誤: ' + error, 'error');
+            });
+        }
+
+        function toggleLED() {
+            const newState = !ledStatus;
+            
+            fetch('/api/led', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ state: newState })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    ledStatus = data.led_status;
+                    updateLEDStatus();
+                    showMessage(data.message, 'success');
+                } else {
+                    showMessage(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showMessage('網路錯誤: ' + error, 'error');
+            });
+        }
+
+        function updateLEDStatus() {
+            const indicator = document.getElementById('led-indicator');
+            const statusText = document.getElementById('led-status');
+            const ledBtn = document.getElementById('led-btn');
+            
+            if (ledStatus) {
+                indicator.className = 'led-indicator led-on';
+                statusText.textContent = '開啟';
+                ledBtn.innerHTML = '💡 關閉 LED';
+            } else {
+                indicator.className = 'led-indicator led-off';
+                statusText.textContent = '關閉';
+                ledBtn.innerHTML = '💡 開啟 LED';
+            }
+        }
+
+        function presetAction(action) {
+            fetch(`/api/preset/${action}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    currentAngle = data.servo_angle;
+                    ledStatus = data.led_status;
+                    
+                    document.getElementById('current-angle').textContent = data.servo_angle + '°';
+                    document.getElementById('angle-display').textContent = data.servo_angle + '°';
+                    document.getElementById('angle-slider').value = data.servo_angle;
+                    
+                    updateLEDStatus();
+                    showMessage(data.message, 'success');
+                } else {
+                    showMessage(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                showMessage('網路錯誤: ' + error, 'error');
+            });
+        }
+
+        function showMessage(text, type) {
+            const messageDiv = document.getElementById('message');
+            messageDiv.textContent = text;
+            messageDiv.className = 'message ' + type;
+            
+            setTimeout(() => {
+                messageDiv.textContent = '';
+                messageDiv.className = '';
+            }, 3000);
+        }
+
+        // 滑桿即時控制
+        document.getElementById('angle-slider').addEventListener('change', function() {
+            setAngle(this.value);
+        });
+
+        // 定期更新狀態
+        setInterval(() => {
+            fetch('/api/status')
+            .then(response => response.json())
+            .then(data => {
+                currentAngle = data.servo_angle;
+                ledStatus = data.led_status;
+                
+                document.getElementById('current-angle').textContent = data.servo_angle + '°';
+                updateLEDStatus();
+            })
+            .catch(error => {
+                console.log('狀態更新失敗:', error);
+            });
+        }, 5000);
+    </script>
+</body>
+</html>
